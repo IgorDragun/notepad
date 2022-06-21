@@ -5,11 +5,11 @@ require_relative 'memo.rb'
 require_relative 'task.rb'
 
 # Знакомимся с пользователем
-puts "Привет, я Ваш блокнот!"
+puts "Привет, я Ваш блокнот! Версия 2.0 (+SQLite)."
 puts "Что бы Вы хотели записать?"
 
 # Получаем варианты записей
-choices = Post.post_types
+choices = Post.post_types.keys
 
 # Определяем выбор по умолчанию
 choice = -1
@@ -23,12 +23,12 @@ until choice >= 0 && choice <= choices.size
 end
 
 # Согласно выбору пользователя создаем объект определенного класса
-entry = Post.create(choice)
+entry = Post.create(choices[choice])
 
 # Просим пользователя ввести определенные данные согласно его выбору
 entry.read_from_console
 
 # Сохраняем полученную информацию в файл
-entry.save
+rowid = entry.save_to_db
 
-puts "Ваша запись сохранена!"
+puts "Ваша запись сохранена. Id записис - #{rowid}."

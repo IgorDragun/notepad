@@ -11,6 +11,7 @@ class Task < Post
     @due_date = ""
   end
 
+
   # Метод для считывания ввода от пользователя и записи его в нужные поля объекта
   # Переопределяем метод родительского класса
   def read_from_console
@@ -25,6 +26,7 @@ class Task < Post
     @due_date = Date.parse(input_date)
   end
 
+
   # Метод для подготовки данных и возврата состояния объекта в виде массива строк для записи в файл
   # Переопределяем метод родительского класса
   def to_strings
@@ -33,4 +35,28 @@ class Task < Post
 
     [time_string, @text, deadline]
   end
+
+
+  # Метод для получения хэша и сохранения в БД новой записи
+  def to_db_hash
+    # Получаем предзаполненных родительских классом хэш и добавляем туда значения дочернего класса
+    return super.merge(
+      {
+        "text" => @text,
+        "due_date" => @due_date.to_s
+      }
+    )
+  end
+
+
+  # Метод для наполнения объекта данными из базы данных
+  def load_data(data_hash)
+    # Сперва вызываем родительский метод
+    super(data_hash)
+
+    # Затем наполняем свои специфичные поля
+    @due_date = Date.parse(data_hash["due_date"])
+    @text = data_hash["text"].split("\n\r")
+  end
+
 end
