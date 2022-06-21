@@ -105,63 +105,85 @@ class Post
   end
 
 
-  # Выполняет поиск записи в БД по id, типу или выбирает все записи
+  # Метод для поиска записи в БД по id, типу или выбирает все записи
   def self.find(limit, type, id)
+
+    # Определяем метод для получения данных из БД согласно указанным пользователем параметрам
+    # Если поиск по id
+    unless id.nil?
+      # Вызываем метод поиска по id
+      find_by_id(id)
+
+    # Если поиск не по id (поиск всех записей)
+    else
+      # Вызываем метод поиска всех записей
+      find_by_all(limit, type)
+    end
+  end
+
+
+  # Метод для поиска записи в БД по id
+  def self.find_by_id(id)
+
     # Открываем соединение с БД
     db = SQLite3::Database.open(@@SQLITE_DB_FILE)
 
-    # Если поиск по id
-    unless id.nil?
-      # Настраиваем БД - результаты из нее будут преобразовываться в хэш
-      db.results_as_hash = true
+    # Настраиваем БД - результаты из нее будут преобразовываться в хэш
+    db.results_as_hash = true
 
-      # Выполняем запрос на поиск записи по id, который возвращает массив результатов
-      result = db.execute("SELECT * FROM posts WHERE rowid = ?", id)
+    # Выполняем запрос на поиск записи по id, который возвращает массив результатов
+    result = db.execute("SELECT * FROM posts WHERE rowid = ?", id)
 
-      # Получаем единственный результат (если вернулся массив)
-      result = result[0] if result.is_a?(Array)
-      db.close
+    # Получаем единственный результат (если вернулся массив)
+    result = result[0] if result.is_a?(Array)
+    db.close
 
-      # Если результат пустой
-      if result.empty?
-        puts "Id #{id} не найден в базе данных."
-        return nil
-      else
-        # Создаем экземпляр класса найденной записи
-        post = create(result["type"])
-
-        # Наполняем пост содержимым
-        post.load_data(result)
-
-        return post
-      end
-
-    # Если поиск не по id (id не передан)
+    # Если результат пустой
+    if result.empty?
+      puts "Id #{id} не найден в базе данных."
+      return nil
     else
-      # Настраиваем БД - результаты из нее НЕ будут преобразовываться в хэш
-      db.results_as_hash = false
+      # Создаем экземпляр класса найденной записи
+      post = create(result["type"])
 
-      # Формируем запрос в БД с нужными условиями
-      query = "SELECT rowid, * FROM posts "
-      # Если задан тип для поиска, то добавляем условие в запрос
-      query += "WHERE type = :type " unless type.nil?
-      # Добавялем в запрос условие сортировки
-      query += "ORDER by rowid DESC "
-      # Если задан лимит, то добавляем условие в запрос
-      query += "LIMIT :limit " unless limit.nil?
+      # Наполняем пост содержимым
+      post.load_data(result)
 
-      # Готовим запрос к БД
-      statement = db.prepare query
-      # Добавляем в запрос тип и лимит вместо плейсхолдеров :type и :limit
-      statement.bind_param("type", type) unless type.nil?
-      statement.bind_param("limit", limit) unless limit.nil?
-
-      # Выполняем запрос
-      result = statement.execute!
-      statement.close
-      db.close
-
-      return result
+      return post
     end
   end
+
+
+  # Метод для поиска всех записей в БД
+  def self.find_by_all(limit, type)
+
+    # Открываем соединение с БД
+    db = SQLite3::Database.open(@@SQLITE_DB_FILE)
+
+    # Настраиваем БД - результаты из нее НЕ будут преобразовываться в хэш
+    db.results_as_hash = false
+
+    # Формируем запрос в БД с нужными условиями
+    query = "SELECT rowid, * FROM posts "
+    # Если задан тип для поиска, то добавляем условие в запрос
+    query += "WHERE type = :type " unless type.nil?
+    # Добавялем в запрос условие сортировки
+    query += "ORDER by rowid DESC "
+    # Если задан лимит, то добавляем условие в запрос
+    query += "LIMIT :limit " unless limit.nil?
+
+    # Готовим запрос к БД
+    statement = db.prepare query
+    # Добавляем в запрос тип и лимит вместо плейсхолдеров :type и :limit
+    statement.bind_param("type", type) unless type.nil?
+    statement.bind_param("limit", limit) unless limit.nil?
+
+    # Выполняем запрос
+    result = statement.execute!
+    statement.close
+    db.close
+
+    return result
+  end
+
 end
