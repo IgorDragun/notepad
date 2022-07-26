@@ -1,1 +1,1 @@
-This is a simple notepad.
+This is a notepad application.
