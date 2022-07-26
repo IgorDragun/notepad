@@ -5,4 +5,4 @@ Users can write and save three kind of notes:
 - task;
 - link.
 
-This application using SQLite DB.
+This application using **SQLite DB**.
